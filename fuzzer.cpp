@@ -1,26 +1,30 @@
-#include "stdafx.h"
+#include <stdlib.h>
+#include <memory.h>
 
-PBYTE
-FuzzAddress(	PBYTE	pAddrToFuzz, 
-				DWORD	FuzzingLength
+#include "rng.h"
+#include "fuzzer.h"
+
+char*
+FuzzAddress(	char* pAddrToFuzz,
+	unsigned long	FuzzingLength
 )
 {
-	BYTE	bRand;
-	WORD	wRand;
-	DWORD	dwRand;
+	unsigned char	bRand;
+	unsigned short	wRand;
+	unsigned long	dwRand;
 	
-    PBYTE   pMutateAddr;
+	char*   pMutateAddr;
     
-	DWORD dwBufferDelta = 4; 
+	unsigned long dwBufferDelta = 4;
     
 	if (!FuzzingLength)
-		return NULL;
+		return 0;
 
-	dwBufferDelta = (BYTE)getrand(0, FuzzingLength - 1);
+	dwBufferDelta = genrand_int32(0, FuzzingLength - 1);
     
     pMutateAddr = pAddrToFuzz + dwBufferDelta;
     
-	BYTE bAction = (BYTE)getrand(0, FUZZING_SIZE);
+	unsigned char bAction = genrand_int8(0, FUZZING_SIZE);
     
     /*
     DbgPrintEx( DPFLTR_DEFAULT_ID, 
@@ -31,79 +35,79 @@ FuzzAddress(	PBYTE	pAddrToFuzz,
 	{
 		case FUZZ_BYTE:
 		{
-			bRand = (BYTE)getrand(0,0xff);
+			bRand = genrand_int8(0,0xff);
 
-			*((PBYTE)pMutateAddr) = bRand;
+			*((unsigned char*)pMutateAddr) = bRand;
 
 			break;
 		}
 			
 		case FUZZ_WORD:
 		{
-            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(WORD))
+            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(unsigned short))
             {
                 pMutateAddr = 0;
                 break;
             }
 
-			wRand = (WORD)getrand(0,0xffff);
+			wRand = genrand_int16(0,0xffff);
 
-			*((PWORD)pMutateAddr) = wRand;
+			*((unsigned short*)pMutateAddr) = wRand;
 
 			break;
 		}
 			
 		case FUZZ_DWORD:
 		{
-            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(DWORD))
+            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(unsigned long))
             {
                 pMutateAddr = 0;
                 break;
             }
                 
-			dwRand = getrand(0,0xfffffffe);
+			dwRand = genrand_int32(0,0xfffffffe);
 
-			*((PDWORD)pMutateAddr) = dwRand;
+			*((unsigned long*)pMutateAddr) = dwRand;
 
 			break;
 		}
 		case FUZZ_INCREMENT:
 		{
-			(*(PBYTE)pMutateAddr)++;
+			(*(unsigned char*)pMutateAddr)++;
 
 			break;
 		}
 		case FUZZ_DECREMENT:
 		{
-			(*(PBYTE)pMutateAddr)--;
+			(*(unsigned char*)pMutateAddr)--;
 
 			break;
 		}
 		case FUZZ_SETFLAG:
 		{
-            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(DWORD))
+            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(unsigned long))
             {
                 pMutateAddr = 0;
                 break;
             }
                 
-			dwRand = getrand(0,31);
+			dwRand = genrand_int32(0,31);
 
-			(*(PDWORD)pMutateAddr) = SET_BIT(dwRand,(*(PWORD)pMutateAddr));
+			(*(unsigned long*)pMutateAddr) = SET_BIT(dwRand,(*(unsigned long*)pMutateAddr));
 			
 			break;
 		}
 		case FUZZ_REMOVEFLAG:
         {
-            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(DWORD))
+            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(unsigned long))
             {
                 pMutateAddr = 0;
                 break;
             }
                 
-			dwRand = getrand(0,31);
+			dwRand = genrand_int32(0,31);
 
-			(*(PDWORD)pMutateAddr) = CLEAR_BIT(dwRand,(*(PWORD)pMutateAddr));
+			(*(unsigned long*)pMutateAddr) = CLEAR_BIT(dwRand,(*(unsigned long*)pMutateAddr));
 			
 			break;
 		}
@@ -113,16 +117,16 @@ FuzzAddress(	PBYTE	pAddrToFuzz,
 		}
 		case FUZZ_PREDEFINED:
 		{
-            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(DWORD))
+            if((FuzzingLength - (pMutateAddr - pAddrToFuzz)) < sizeof(unsigned long))
             {
                 pMutateAddr = 0;
                 break;
             }
                 
-			bRand = (BYTE)getrand(0,sizeof(m_DwordFuzzingConstants)/sizeof(((PULONG)m_DwordFuzzingConstants)[0])) - 1;
+			bRand = genrand_int8(0,sizeof(m_DwordFuzzingConstants)/sizeof(((unsigned long*)m_DwordFuzzingConstants)[0])) - 1;
 
-			dwRand = ((PULONG)m_DwordFuzzingConstants)[bRand];
-			*((PDWORD)pMutateAddr) = dwRand;
+			dwRand = ((unsigned long*)m_DwordFuzzingConstants)[bRand];
+			*((unsigned long*)pMutateAddr) = dwRand;
 
 			break;
 		}
@@ -135,44 +139,44 @@ FuzzAddress(	PBYTE	pAddrToFuzz,
 	return pMutateAddr;
 }
 
-PVOID
+unsigned char*
 GenerateRandBuffer(
-	DWORD	dwSize
+	unsigned long	dwSize
 )
 {
-	PVOID pBuffer = AllocateBuffer(dwSize);
+	unsigned char* pBuffer = (unsigned char*)AllocateBuffer(dwSize);
 
 	if (!pBuffer)
-		return NULL;
+		return 0;
 
 	for (size_t i = 0; i < dwSize; i++)
-		((PBYTE)pBuffer)[i] = (BYTE)getrand(0x0, 0xff);
+		((unsigned char*)pBuffer)[i] = genrand_int8(0x0, 0xff);
 
 	return pBuffer;
 }
 
-PVOID
+unsigned char*
 GenerateRandDigitStr(
-	DWORD dwSize
+	unsigned long dwSize
 )
 {
-	PVOID pBuffer = AllocateBuffer(dwSize);
+	unsigned char* pBuffer = (unsigned char*)AllocateBuffer(dwSize);
 
 	if (!pBuffer)
 		return NULL;
 
 	for (size_t i = 0; i < dwSize; i++)
-		((PBYTE)pBuffer)[i] = (BYTE)(digit[getrand(0x0, _countof(digit) - 1)]);
+		((unsigned char*)pBuffer)[i] = (unsigned char)(digit[genrand_int32(0x0, _countof(digit) - 1)]);
 
 	return pBuffer;
 }
 
-PVOID
+unsigned char*
 GenerateRandStr(
-	DWORD dwSize
+	unsigned long dwSize
 )
 {
-	PVOID pBuffer = AllocateBuffer(dwSize + sizeof(char));
+	unsigned char* pBuffer = (unsigned char*)AllocateBuffer(dwSize + sizeof(char));
 
 	if (!pBuffer)
 		return NULL;
@@ -180,17 +184,17 @@ GenerateRandStr(
 	memset(pBuffer, 0x0, dwSize + sizeof(char));
 
 	for (size_t i = 0; i < dwSize; i++)
-		((PBYTE)pBuffer)[i] = (BYTE)(letters[getrand(0x0, _countof(letters) - 1)]);
+		((unsigned char*)pBuffer)[i] = (unsigned char)(letters[genrand_int32(0x0, _countof(letters) - 1)]);
 
 	return pBuffer;
 }
 
-PVOID
+unsigned char*
 GenerateRandDigitWStr(
-	DWORD dwSize
+	unsigned long dwSize
 )
 {
-	PVOID pBuffer = AllocateBuffer(dwSize * 2 + sizeof(wchar_t));
+	unsigned char* pBuffer = (unsigned char*)AllocateBuffer(dwSize * 2 + sizeof(wchar_t));
 
 	if (!pBuffer)
 		return NULL;
@@ -198,17 +202,17 @@ GenerateRandDigitWStr(
 	memset(pBuffer, 0x0, dwSize * 2 + sizeof(wchar_t));
 
 	for (size_t i = 0; i < dwSize * 2; i += 2)
-		((PBYTE)pBuffer)[i] = (BYTE)(digit[getrand(0x0, _countof(digit) - 1)]);
+		((unsigned char*)pBuffer)[i] = (unsigned char)(digit[genrand_int32(0x0, _countof(digit) - 1)]);
 
 	return pBuffer;
 }
 
-PVOID
+unsigned char*
 GenerateRandWStr(
-	DWORD dwSize
+	unsigned long dwSize
 )
 {
-	PVOID pBuffer = AllocateBuffer(dwSize*2 + sizeof(wchar_t));
+	unsigned char* pBuffer = (unsigned char*)AllocateBuffer(dwSize*2 + sizeof(wchar_t));
 
 	if (!pBuffer)
 		return NULL;
@@ -216,28 +220,28 @@ GenerateRandWStr(
 	memset(pBuffer, 0x0, dwSize*2 + sizeof(wchar_t));
 
 	for (size_t i = 0; i < dwSize*2; i += 2)
-		((PBYTE)pBuffer)[i] = (BYTE)(letters[getrand(0x0, _countof(letters) - 1)]);
+		((unsigned char*)pBuffer)[i] = (unsigned char)(letters[genrand_int32(0x0, _countof(letters) - 1)]);
 
 	return pBuffer;
 }
 
 
-VOID
-FreeRandBuffer(PVOID pBuffer)
+void
+FreeRandBuffer(char* pBuffer)
 {
 	if (pBuffer)
 		FreeBuffer(pBuffer);
 }
 
-DWORD
+unsigned long
 ConcatBuffer(
-	PBYTE* pDstBuf,
-	PBYTE	pSrcBuf,
-	DWORD	dwDstBufSize,
-	DWORD	dwSrcBufSize
+	unsigned char** pDstBuf,
+	unsigned char* pSrcBuf,
+	unsigned long	dwDstBufSize,
+	unsigned long	dwSrcBufSize
 )
 {
-	*pDstBuf = (PBYTE)realloc(*pDstBuf, dwSrcBufSize + dwDstBufSize);
+	*pDstBuf = (unsigned char*)realloc(*pDstBuf, dwSrcBufSize + dwDstBufSize);
 	memcpy(*pDstBuf + dwDstBufSize, pSrcBuf, dwSrcBufSize);
 
 	return

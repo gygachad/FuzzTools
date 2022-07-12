@@ -7,7 +7,7 @@
 #define CHOICE(arr) arr[getrand(0,_countof(arr) - 1)]
 
 // constants for dword fuzzing
-static ULONG m_DwordFuzzingConstants[] =
+static unsigned long m_DwordFuzzingConstants[] =
 {
     0x00000000,
     0x10000000,
@@ -60,40 +60,40 @@ static const char letters[] =
 
 #define  SET_BIT(bitNum,number)(number|(0x1<<bitNum))
 
-PBYTE
-FuzzAddress(	PBYTE	dwAddrToFuzz, 
-				DWORD	FuzzingLength);
+char*
+FuzzAddress(	char*	dwAddrToFuzz, 
+				unsigned long	FuzzingLength);
 
-PVOID
-GenerateRandBuffer(	DWORD	dwSize);
+unsigned char*
+GenerateRandBuffer(unsigned long	dwSize);
 
-VOID
-FreeRandBuffer(PVOID pBuffer);
+void
+FreeRandBuffer(char* pBuffer);
 
-PVOID
+unsigned char*
 GenerateRandDigitStr(
-	DWORD dwSize
+	unsigned long dwSize
 );
 
-PVOID
+unsigned char*
 GenerateRandStr(
-	DWORD dwSize
+	unsigned long dwSize
 );
 
-PVOID
+unsigned char*
 GenerateRandDigitWStr(
-	DWORD dwSize
+	unsigned long dwSize
 );
 
-PVOID
+unsigned char*
 GenerateRandWStr(
-	DWORD dwSize
+	unsigned long dwSize
 );
 
-DWORD
+unsigned long
 ConcatBuffer(
-	PBYTE* pDstBuf,
-	PBYTE	pSrcBuf,
-	DWORD	dwDstBufSize,
-	DWORD	dwSrcBufSize
+	char** pDstBuf,
+	char*	pSrcBuf,
+	unsigned long	dwDstBufSize,
+	unsigned long	dwSrcBufSize
 );

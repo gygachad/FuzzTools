@@ -227,7 +227,7 @@ GenerateRandWStr(
 
 
 void
-FreeRandBuffer(char* pBuffer)
+FreeRandBuffer(unsigned char* pBuffer)
 {
 	if (pBuffer)
 		FreeBuffer(pBuffer);

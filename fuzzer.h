@@ -68,7 +68,7 @@ unsigned char*
 GenerateRandBuffer(unsigned long	dwSize);
 
 void
-FreeRandBuffer(char* pBuffer);
+FreeRandBuffer(unsigned char* pBuffer);
 
 unsigned char*
 GenerateRandDigitStr(

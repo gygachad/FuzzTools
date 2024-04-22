@@ -4,7 +4,7 @@
 #define FreeBuffer(pBuffer)					free(pBuffer)
 #define ReallocateBuffer(pBuffer, dwBytes)	realloc(pBuffer, dwBytes)
 
-#define CHOICE(arr) arr[getrand(0,_countof(arr) - 1)]
+#define CHOICE(arr) arr[genrand_int32(0,_countof(arr) - 1)]
 
 // constants for dword fuzzing
 static unsigned long m_DwordFuzzingConstants[] =
